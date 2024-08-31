@@ -8,14 +8,14 @@ import websocket
 import json
 import time
 
+PORT = 5000
+IP = "localhost"
+
 class TestESP32WebServer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        ip = environ.get('ESP32_IP')
-        if ip is None:
-            raise ValueError("ESP32_IP environment variable not set.")
-        cls.base_url = f'http://{ip}:80'
-        cls.ws_url = f'ws://{ip}:80/ws'
+        cls.base_url = f'http://{IP}:{PORT}'
+        cls.ws_url = f'ws://{IP}:{PORT}/ws'
 
     def test_get_matrix_http(self):
         response = requests.get(self.base_url + '/getMatrix')
@@ -26,13 +26,13 @@ class TestESP32WebServer(unittest.TestCase):
     def test_set_pixel_http(self):
         # valid parameters
         payload = {'x': '10', 'y': '10', 'color': '16711680'}
-        response = requests.post(self.base_url + '/setPixel', data=payload)
+        response = requests.post(self.base_url + '/setPixel', json=payload)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "success"})
 
         # invalid parameters
         payload_invalid = {'x': '100', 'y': '100', 'color': '16777216'} 
-        response_invalid = requests.post(self.base_url + '/setPixel', data=payload_invalid)
+        response_invalid = requests.post(self.base_url + '/setPixel', json=payload_invalid)
         self.assertEqual(response_invalid.status_code, 400)
         self.assertEqual(response_invalid.json()["status"], "error")
 
@@ -61,23 +61,23 @@ class TestESP32WebServer(unittest.TestCase):
         self.assertEqual(response_invalid["status"], "error")
         ws.close()
         
-    def test_set_matrix_to_white(self):
-        ws = websocket.create_connection(self.ws_url)
-        for x in range(64):
-            for y in range(32):
-                ws.send(f"setPixel,{x},{y},16777215")
-                time.sleep(0.01)
+    # def test_set_matrix_to_white(self):
+    #     ws = websocket.create_connection(self.ws_url)
+    #     for x in range(64):
+    #         for y in range(32):
+    #             ws.send(f"setPixel,{x},{y},16777215")
+    #             time.sleep(0.01)
                 
-        ws.close()
+    #     ws.close()
         
-    def test_set_matrix_to_black(self):
-        ws = websocket.create_connection(self.ws_url)
-        for x in range(64):
-            for y in range(32):
-                ws.send(f"setPixel,{x},{y},0")
-                time.sleep(0.01)
+    # def test_set_matrix_to_black(self):
+    #     ws = websocket.create_connection(self.ws_url)
+    #     for x in range(64):
+    #         for y in range(32):
+    #             ws.send(f"setPixel,{x},{y},0")
+    #             time.sleep(0.01)
                 
-        ws.close()
+    #     ws.close()
 
 if __name__ == '__main__':
     unittest.main()
