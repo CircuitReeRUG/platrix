@@ -32,19 +32,19 @@ function Grid(props: GridProps) {
         />
       );
     }
-
-    // Style for the grid
-    const gridStyle: React.CSSProperties = {
-      display: "grid",
-      gridTemplateColumns: `repeat(${props.width}, auto)`,
-      gridTemplateRows: `repeat(${props.height}, auto)`,
-      gap: "1px",
-      justifyContent: "start",
-      alignItems: "start",
-    };
-
-    return <div style={gridStyle}>{squares}</div>;
   }
+
+  // Style for the grid
+  const gridStyle: React.CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: `repeat(${props.width}, auto)`,
+    gridTemplateRows: `repeat(${props.height}, auto)`,
+    gap: "1px",
+    justifyContent: "start",
+    alignItems: "start",
+  };
+
+  return <div style={gridStyle}>{squares}</div>;
 }
 
 export default Grid;
