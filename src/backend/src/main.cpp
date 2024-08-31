@@ -1,3 +1,8 @@
+/* 
+ * Server for controlling LED matrix
+ * Creator: CircuitRee - Boyan
+ * 
+*/
 #include <Arduino.h>
 #include "WiFi.h"
 #include "AsyncTCP.h"
@@ -112,28 +117,6 @@ void setup() {
 
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
-
-    // /getMatrix endpoint
-    server.on("/getMatrix", HTTP_GET, [](AsyncWebServerRequest *request) {
-        sendJsonResponse(request, 200, jsonMatrix().c_str());
-    });
-
-    // /setPixel endpoint
-    server.on("/setPixel", HTTP_POST, [](AsyncWebServerRequest *request) {
-        if (request->hasParam("x", true) && request->hasParam("y", true) && request->hasParam("color", true)) {
-            int x = request->getParam("x", true)->value().toInt();
-            int y = request->getParam("y", true)->value().toInt();
-            uint32_t packedColor = request->getParam("color", true)->value().toInt();
-
-            if (isValidPixel(x, y, packedColor) && setPixelColor(x, y, packedColor)) {
-                sendJsonResponse(request, 200, "{\"status\": \"success\"}");
-            } else {
-                sendJsonResponse(request, 400, "{\"status\": \"error\", \"message\": \"invalid parameters\"}");
-            }
-        } else {
-            sendJsonResponse(request, 400, "{\"status\": \"error\", \"message\": \"malformed request\"}");
-        }
-    });
 
     server.begin();
 }

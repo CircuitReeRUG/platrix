@@ -14,27 +14,7 @@ IP = "localhost"
 class TestESP32WebServer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.base_url = f'http://{IP}:{PORT}'
         cls.ws_url = f'ws://{IP}:{PORT}/ws'
-
-    def test_get_matrix_http(self):
-        response = requests.get(self.base_url + '/getMatrix')
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(isinstance(response.json(), dict))
-        self.assertIn('matrix', response.json())
-
-    def test_set_pixel_http(self):
-        # valid parameters
-        payload = {'x': '10', 'y': '10', 'color': '16711680'}
-        response = requests.post(self.base_url + '/setPixel', json=payload)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"status": "success"})
-
-        # invalid parameters
-        payload_invalid = {'x': '100', 'y': '100', 'color': '16777216'} 
-        response_invalid = requests.post(self.base_url + '/setPixel', json=payload_invalid)
-        self.assertEqual(response_invalid.status_code, 400)
-        self.assertEqual(response_invalid.json()["status"], "error")
 
     def test_websocket_get_matrix(self):
         # getMatrix
