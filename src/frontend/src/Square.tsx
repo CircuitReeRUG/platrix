@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
 
 interface SquareProps {
-<<<<<<< Updated upstream
-    initialColor: {
-        r: number,
-        g: number;
-        b: number;
-    };
-=======
   key: string;
   x: number;
   y: number;
@@ -20,7 +13,6 @@ interface SquareProps {
   setPixel: (x: number, y: number, color: number) => void;
   onColorPickerOpen: () => void;
   onColorPickerClose: () => void;
->>>>>>> Stashed changes
 }
 
 function Square(props: SquareProps) {
@@ -39,36 +31,6 @@ function Square(props: SquareProps) {
 
   const rgbToHex = (r: number, g: number, b: number) => {
     return (
-<<<<<<< Updated upstream
-        <div>
-            <div style={{
-                minHeight: '12px',
-            	minWidth: '12px',
-                background: `rgb(${color.r}, ${color.g}, ${color.b})`,
-                cursor: 'pointer',
-            }} onClick={() => {
-                setDisplayColorPicker(!displayColorPicker)
-            }}></div>
-
-            {displayColorPicker ? <div style={{
-                position: 'absolute',
-                zIndex: '2',
-            }}>
-                <div style={{
-                    position: 'fixed',
-                    top: '0px',
-                    right: '0px',
-                    bottom: '0px',
-                    left: '0px',
-                }} onClick={() => {
-                    setDisplayColorPicker(false);
-                }} />
-                <ChromePicker
-                    color={color}
-                    disableAlpha={true}
-                    onChangeComplete={(color) => setColor(color.rgb)} />
-            </div> : null}
-=======
       "#" +
       ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()
     );
@@ -82,7 +44,6 @@ function Square(props: SquareProps) {
       b: bigint & 255,
     };
   };
->>>>>>> Stashed changes
 
   // If matrix changes, check if the color of this square has changed
   useEffect(() => {
@@ -154,8 +115,4 @@ function Square(props: SquareProps) {
   );
 }
 
-<<<<<<< Updated upstream
-export default Square
-=======
 export default Square;
->>>>>>> Stashed changes

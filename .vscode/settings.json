@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.asm": "lc3",
+        "compare": "cpp",
+        "cstdint": "cpp"
+    }
+}
