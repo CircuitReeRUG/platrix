@@ -18,6 +18,7 @@ Matrix createMatrix(int rows, int cols, int chainLength) {
     // Config
     HUB75_I2S_CFG mxconfig(rows, cols, chainLength);
     matrix.panel = new MatrixPanel_I2S_DMA(mxconfig);
+    matrix.panel->begin();
     return matrix;
 }
 

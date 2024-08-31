@@ -4,12 +4,12 @@
 #include "ESPAsyncWebServer.h"
 #include "matrix.h"
 
-#define PANEL_WIDTH 4
-#define PANEL_HEIGHT 4
+#define PANEL_WIDTH 64
+#define PANEL_HEIGHT 32
 #define CHAIN_LENGTH 1
 
-const char* ssid = "CircuitRee";
-const char* password = "ChippyIsTheGoat";
+const char *ssid = "CircuitRee";
+const char *password = "ChippyIsTheGoat";
 Matrix matrix = createMatrix(PANEL_HEIGHT, PANEL_WIDTH, CHAIN_LENGTH);
 
 AsyncWebServer server(80);
@@ -22,7 +22,7 @@ uint16_t packColor(uint32_t packedColor) {
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
 
-// Set pixel on matrix go boom
+// Set pixel on matrix
 bool setPixelColor(int x, int y, uint32_t packedColor) {
     if (x >= 0 && x < PANEL_WIDTH && y >= 0 && y < PANEL_HEIGHT) {
         uint16_t color = packColor(packedColor);
@@ -32,14 +32,30 @@ bool setPixelColor(int x, int y, uint32_t packedColor) {
     return false;
 }
 
-// Convert matrix data to a JSON string
+bool isValidPixel(int x, int y, uint32_t packedColor) {
+    return !(x < 0 || x >= PANEL_WIDTH || y < 0 || y >= PANEL_HEIGHT || packedColor > 0xFFFFFF);
+}
+
+void sendJsonResponse(AsyncWebServerRequest *request, int statusCode, const char *message) {
+    request->send(statusCode, "application/json", message);
+}
+
+void sendJsonResponse(AsyncWebSocketClient *client, const char *message) {
+    client->text(message);
+}
+
+// matrix state -> JSON
 String jsonMatrix() {
     String json = "{ \"matrix\": [";
     for (int y = 0; y < matrix.rows; y++) {
         json += "[";
         for (int x = 0; x < matrix.cols; x++) {
             uint16_t color = getPixel(matrix, y, x);
-            uint32_t packedColor = ((color & 0xF800) << 8) | ((color & 0x07E0) << 5) | ((color & 0x001F) << 3);
+            uint8_t r = (color >> 8) & 0xF8;
+            uint8_t g = (color >> 3) & 0xFC;
+            uint8_t b = (color << 3) & 0xF8;
+            uint32_t packedColor = (r << 16) | (g << 8) | b;
+
             json += String(packedColor);
             if (x < matrix.cols - 1) json += ",";
         }
@@ -50,30 +66,37 @@ String jsonMatrix() {
     return json;
 }
 
-// ws events
+void handleWS(AsyncWebSocketClient *client, String msg) {
+    if (msg.startsWith("getMatrix")) {
+        sendJsonResponse(client, jsonMatrix().c_str());
+    } else if (msg.startsWith("setPixel")) {
+        int comma1 = msg.indexOf(',');
+        int comma2 = msg.lastIndexOf(',');
+        if (comma1 == -1 || comma2 == -1 || comma1 == comma2) {
+            sendJsonResponse(client, "{\"status\": \"error\", \"message\": \"malformed request\"}");
+            return;
+        }
+
+        int x = msg.substring(9, comma1).toInt();
+        int y = msg.substring(comma1 + 1, comma2).toInt();
+        uint32_t packedColor = msg.substring(comma2 + 1).toInt();
+
+        if (isValidPixel(x, y, packedColor) && setPixelColor(x, y, packedColor)) {
+            sendJsonResponse(client, "{\"status\": \"success\"}");
+        } else {
+            sendJsonResponse(client, "{\"status\": \"error\", \"message\": \"invalid parameters\"}");
+        }
+    } else {
+        sendJsonResponse(client, "{\"status\": \"error\", \"message\": \"unknown command\"}");
+    }
+}
+
+// WebSocket events
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
     if (type == WS_EVT_DATA) {
-        String msg = (char*)data;
-
-        // getMatrix
-        if (msg.startsWith("getMatrix")) {
-            String json = jsonMatrix();
-            client->text(json);
-        } else if (msg.startsWith("setPixel")) { // setPixel
-            // Unpacking Message
-            int comma1 = msg.indexOf(',');
-            int comma2 = msg.lastIndexOf(',');
-            int x = msg.substring(9, comma1).toInt();
-            int y = msg.substring(comma1 + 1, comma2).toInt();
-            uint32_t packedColor = msg.substring(comma2 + 1).toInt();
-
-            // Setting pixel and repsonding
-            if (setPixelColor(x, y, packedColor)) {
-                client->text("{\"status\": \"success\"}");
-            } else {
-                client->text("{\"status\": \"error\", \"message\": \"invalid\"}");
-            }
-        }
+        data[len] = '\0';
+        String msg = (char *)data;
+        handleWS(client, msg);
     }
 }
 
@@ -91,24 +114,24 @@ void setup() {
     server.addHandler(&ws);
 
     // /getMatrix endpoint
-    server.on("/getMatrix", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(200, "application/json", jsonMatrix());
+    server.on("/getMatrix", HTTP_GET, [](AsyncWebServerRequest *request) {
+        sendJsonResponse(request, 200, jsonMatrix().c_str());
     });
 
     // /setPixel endpoint
-    server.on("/setPixel", HTTP_POST, [](AsyncWebServerRequest *request){
+    server.on("/setPixel", HTTP_POST, [](AsyncWebServerRequest *request) {
         if (request->hasParam("x", true) && request->hasParam("y", true) && request->hasParam("color", true)) {
             int x = request->getParam("x", true)->value().toInt();
             int y = request->getParam("y", true)->value().toInt();
             uint32_t packedColor = request->getParam("color", true)->value().toInt();
 
-            if (setPixelColor(x, y, packedColor)) {
-                request->send(200, "application/json", "{\"status\": \"success\"}");
+            if (isValidPixel(x, y, packedColor) && setPixelColor(x, y, packedColor)) {
+                sendJsonResponse(request, 200, "{\"status\": \"success\"}");
             } else {
-                request->send(400, "application/json", "{\"status\": \"error\", \"message\": \"invalid\"}");
+                sendJsonResponse(request, 400, "{\"status\": \"error\", \"message\": \"invalid parameters\"}");
             }
         } else {
-            request->send(400, "application/json", "{\"status\": \"error\", \"message\": \"malformed request\"}");
+            sendJsonResponse(request, 400, "{\"status\": \"error\", \"message\": \"malformed request\"}");
         }
     });
 

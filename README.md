@@ -23,7 +23,7 @@ Made for the [Cover Committee Market 2024](https://svcover.nl/calendar?agenda_id
 
 ## Endpoints
 
-When interacting with the API through WS, just remove the leading `/` from the endpoint and send it as a message, should work the exact same way.
+When interacting with the API through WS, just prepend the endpoint with `/ws` and use the WebSocket protocol.
 
 ### /getMatrix
 
