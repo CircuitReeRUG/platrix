@@ -17,19 +17,22 @@ function Grid(props: GridProps) {
         };
     };
 
-    for (let i = 0; i < props.height; i++)
-        for (let i = 0; i < props.width; i++) {
-            squares.push(<Square initialColor={generateRandomColor()} />)
+    for (let i = 0; i < props.height; i++) {
+        for (let j = 0; j < props.width; j++) {
+            squares.push(<Square
+                key={`p${i}:${j}`}
+                initialColor={generateRandomColor()}
+            />)
         }
+    }
 
     const gridStyle = {
         display: 'grid',
-        gridTemplateColumns: `repeat(${props.width}, 50px)`,
-        gridGap: '5px',
+        gridTemplateColumns: `repeat(${props.width}, 1fr)`,
     };
 
     return (
-        <div style={gridStyle}>
+        <div id="pixelGrid" style={gridStyle}>
             {squares}
         </div>
     )

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChromePicker } from 'react-color';
 
 interface SquareProps {
+    key: string;
     initialColor: {
         r: number,
         g: number;
@@ -16,17 +17,14 @@ function Square(props: SquareProps) {
     return (
         <div>
             <div style={{
-                width: '50px',
-                height: '50px',
+                minHeight: '12px',
+            	minWidth: '12px',
                 background: `rgb(${color.r}, ${color.g}, ${color.b})`,
+                cursor: 'pointer',
             }} onClick={() => {
                 setDisplayColorPicker(!displayColorPicker)
-            }}>
-                <div style={{
-                    padding: '1px',
-                    cursor: 'pointer',
-                }} />
-            </div>
+            }}></div>
+
             {displayColorPicker ? <div style={{
                 position: 'absolute',
                 zIndex: '2',
@@ -42,7 +40,8 @@ function Square(props: SquareProps) {
                 }} />
                 <ChromePicker
                     color={color}
-                    onChange={(color) => setColor(color.rgb)} />
+                    disableAlpha={true}
+                    onChangeComplete={(color) => setColor(color.rgb)} />
             </div> : null}
 
         </div>
