@@ -5,20 +5,16 @@ import json
 app = Flask(__name__)
 sock = Sock(app)
 
-# Initialize a 64x32 matrix filled with zeros (representing black color)
 PANEL_WIDTH = 64
 PANEL_HEIGHT = 32
 matrix = [[0 for _ in range(PANEL_HEIGHT)] for _ in range(PANEL_WIDTH)]
 
-# Utility function to check if coordinates are within the matrix bounds
 def is_valid_coordinate(x, y):
     return 0 <= x < PANEL_WIDTH and 0 <= y < PANEL_HEIGHT
 
-# Utility function to check if the color is valid (0 to 16777215)
 def is_valid_color(color):
     return 0 <= color <= 16777215
 
-# HTTP endpoint to get the current state of the matrix
 @app.route('/getMatrix', methods=['GET'])
 def get_matrix():
     return jsonify({"matrix": matrix}), 200
@@ -42,11 +38,9 @@ def ws_handler(ws):
         data = ws.receive()
         try:
             if data == "getMatrix":
-                # Handle getMatrix request
                 response = {"matrix": matrix}
                 ws.send(json.dumps(response))
             else:
-                # Handle setPixel request
                 parts = data.split(',')
                 if len(parts) != 4 or parts[0] != 'setPixel':
                     raise ValueError("Invalid message format")
