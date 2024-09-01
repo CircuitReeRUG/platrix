@@ -3,6 +3,12 @@ import flask_sock
 import json
 from time import sleep
 import logging
+from rgbmatrix import RGBMatrix, RGBMatrixOptions
+
+USING_MATRIX = False
+M_WIDTH = 64
+M_HEIGHT = 32
+M_CHAIN = 1
 
 app = Flask(__name__)
 sock = flask_sock.Sock(app)
@@ -11,13 +17,27 @@ sock = flask_sock.Sock(app)
 logging.basicConfig(level=logging.INFO)
 
 # Set Matrix dimensions
-PANEL_WIDTH = 64
-PANEL_HEIGHT = 32
-matrix = [[0 for _ in range(PANEL_WIDTH)] for _ in range(PANEL_HEIGHT)]
+if USING_MATRIX:
+    options = RGBMatrixOptions()
+    options.rows = M_HEIGHT
+    options.cols = M_WIDTH
+    options.chain_length = M_CHAIN
+    options.parallel = 1
+    options.hardware_mapping = 'regular'
 
+    matrix = RGBMatrix(options = options)
+    matrix.Fill(0, 0, 0) # Fill the matrix with black color
+
+matrix_data = [[0 for _ in range(M_WIDTH)] for _ in range(M_HEIGHT)]
+
+def __update_pixel(x:int, y:int, color:int) -> None:
+    matrix_data[y][x] = color
+    if USING_MATRIX:
+        matrix.SetPixel(x, y, (color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF)
+    return None
 
 def __is_valid_coordinate(x:int, y:int) -> bool:
-    return 0 <= x < PANEL_WIDTH and 0 <= y < PANEL_HEIGHT
+    return 0 <= x < options.rows and 0 <= y < options.cols
 
 def __is_valid_color(color:int) -> bool:
     return 0 <= color <= 16777215 # 0xFFFFFF
@@ -27,7 +47,7 @@ def broadcast_matrix(connected_clients:set) -> None:
     """
     for client in app.connected_clients:
         try:
-            response = json.dumps({"matrix": matrix})
+            response = json.dumps({"matrix": matrix_data})
             client.send(response)
         # Except if client is disconnected (specific exception)
         except Exception as e:
@@ -56,7 +76,7 @@ def websocket_handler(ws):
 
             # Handle the `getMatrix` command
             if message.strip() == "getMatrix":
-                response = json.dumps({"matrix": matrix})
+                response = json.dumps({"matrix": matrix_data})
                 ws.send(response)
 
             # Handle the `setPixel` command
@@ -70,9 +90,9 @@ def websocket_handler(ws):
                     if not __is_valid_color(color):
                         raise ValueError("Invalid color")
 
-                    matrix[y][x] = color
+                    __update_pixel(x, y, color)
 
-                    response = json.dumps({"matrix": matrix})
+                    response = json.dumps({"matrix": matrix_data})
                     broadcast_matrix(app.connected_clients)
 
                 except ValueError as ve:
