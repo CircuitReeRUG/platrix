@@ -3,7 +3,7 @@ import Grid from './Grid';
 import useWebSocket from 'react-use-websocket';
 import chippy from './assets/chippy.png';
 
-const SERVER_URL = 'ws://192.168.0.100:5000/ws';
+const SERVER_URL = 'ws://127.0.0.1:5000/ws';
 
 function App() {
   // Initialize ws connection

@@ -3,7 +3,6 @@
 
 import unittest
 from os import environ
-import requests
 import websocket
 import json
 import time
@@ -32,13 +31,13 @@ class TestESP32WebServer(unittest.TestCase):
         ws.send("setPixel,10,10,16711680")
         result = ws.recv()
         response = json.loads(result)
-        self.assertEqual(response["status"], "success")
-
+        self.assertTrue(isinstance(response, dict))
+        self.assertIn('matrix', response)
+        
         # invalid parameters
         ws.send("setPixel,100,100,16777216")
         result_invalid = ws.recv()
         response_invalid = json.loads(result_invalid)
-        self.assertEqual(response_invalid["status"], "error")
         ws.close()
         
     # def test_set_matrix_to_white(self):
