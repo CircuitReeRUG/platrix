@@ -1,81 +1,102 @@
-from flask import Flask, request, jsonify
-from flask_sock import Sock
+from flask import Flask, jsonify
+import flask_sock
 import json
 from time import sleep
+import logging
 
 app = Flask(__name__)
-sock = Sock(app)
+sock = flask_sock.Sock(app)
 
+# set logging level
+logging.basicConfig(level=logging.INFO)
+
+# Set Matrix dimensions
 PANEL_WIDTH = 64
-PANEL_HEIGHT = 64
-matrix = [[0 for _ in range(PANEL_HEIGHT)] for _ in range(PANEL_WIDTH)]
-
-# List to keep track of connected WebSocket clients
-connected_clients = []
+PANEL_HEIGHT = 32
+matrix = [[0 for _ in range(PANEL_WIDTH)] for _ in range(PANEL_HEIGHT)]
 
 
-def is_valid_coordinate(x, y):
+def __is_valid_coordinate(x:int, y:int) -> bool:
     return 0 <= x < PANEL_WIDTH and 0 <= y < PANEL_HEIGHT
 
+def __is_valid_color(color:int) -> bool:
+    return 0 <= color <= 16777215 # 0xFFFFFF
 
-def is_valid_color(color):
-    return 0 <= color <= 16777215
-
-
-def broadcast_matrix():
-    response = json.dumps({"matrix": matrix})
-    disconnected_clients = []
-    for client in connected_clients:
+def broadcast_matrix(connected_clients:set) -> None:
+    """Broadcasts the current matrix to all connected clients.
+    """
+    for client in app.connected_clients:
         try:
+            response = json.dumps({"matrix": matrix})
             client.send(response)
+        # Except if client is disconnected (specific exception)
         except Exception as e:
-            print(f"Failed to send to client: {e}")
-            disconnected_clients.append(client)
-
-    # Remove disconnected clients
-    for client in disconnected_clients:
-        connected_clients.remove(client)
-
+            logging.warn(f"Failed to send to client: {e}")
+            app.connected_clients.remove(client)
+            client.close(reason="Failed to receive data")
+    return None
 
 @sock.route('/ws')
-def ws_handler(ws):
-    if ws not in connected_clients:
-        connected_clients.append(ws)
-        print(f"Client connected. Total: {len(connected_clients)}")
+def websocket_handler(ws):
+    if not hasattr(app, 'connected_clients'):
+        app.connected_clients = set()
+
+    if ws in app.connected_clients:
+        ws.close(reason="Already connected. Begone!")
+        return
+    
+    app.connected_clients.add(ws)
+    logging.info(f"Client connected. Total: {len(app.connected_clients)}")
+
     try:
         while True:
-            data = ws.receive()
-            if data == "getMatrix":
-                response = {"matrix": matrix}
-                ws.send(json.dumps(response))
-            elif data.startswith("setPixel"):
-                parts = data.split(',')
-                if len(parts) != 4 or parts[0] != 'setPixel':
-                    raise ValueError("Invalid message format")
+            message = ws.receive()
+            if message is None:
+                raise ConnectionAbortedError("No data received")
 
-                x = int(parts[1])
-                y = int(parts[2])
-                color = int(parts[3])
-                print(f"Received: x={x}, y={y}, color={color}")
-                if not is_valid_coordinate(x, y) or not is_valid_color(color):
-                    ws.send(json.dumps(
-                        {"status": "error", "message": "invalid"}))
-                    continue
+            # Handle the `getMatrix` command
+            if message.strip() == "getMatrix":
+                response = json.dumps({"matrix": matrix})
+                ws.send(response)
 
-                print(
-                    f"Setting pixel at ({x}, {y}) to color {color}, old color: {matrix[x][y]}")
-                matrix[y][x] = color
-                broadcast_matrix()
-                ws.send(json.dumps({"status": "success"}))
+            # Handle the `setPixel` command
+            elif message.startswith("setPixel"):
+                try:
+                    _, x, y, color = message.split(',')
+                    x, y, color = int(x), int(y), int(color)
 
+                    if not __is_valid_coordinate(x, y):
+                        raise ValueError("Invalid coordinates")
+                    if not __is_valid_color(color):
+                        raise ValueError("Invalid color")
+
+                    matrix[y][x] = color
+
+                    response = json.dumps({"matrix": matrix})
+                    broadcast_matrix(app.connected_clients)
+
+                except ValueError as ve:
+                    error_response = json.dumps({
+                        "status": "error",
+                        "message": str(ve)
+                    })
+                    ws.send(error_response)
+                except Exception as e:
+                    raise ConnectionAbortedError("Hell no. Whatever you sent is not it.")
+            else:
+                raise ConnectionAbortedError("You can't do that!")
+           
+    except ConnectionAbortedError as cae:
+        ws.close(reason=str(cae))
+         
     except Exception as e:
-        print(f"Error: {e}")
+        if ("1001" or "1006") not in str(e):
+            logging.error(f"WebSocket connection error: {e}")
     finally:
-        # Remove client from the list when they disconnect
-        if ws in connected_clients:
-            connected_clients.remove(ws)
-            print("Client disconnected.")
+        # Cleanup when the client disconnects
+        logging.info(f"Client disconnected. Total: {len(app.connected_clients)}")
+        if ws in app.connected_clients:
+            app.connected_clients.remove(ws)
 
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+if __name__ == "__main__":
+    app.run(port=5000, debug=True)

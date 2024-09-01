@@ -85,7 +85,7 @@ setPixel,<x>,<y>,<16-bit packed color>
 - **message**: Pretty useless error message.
 
 ### Matrix broadcast
-The matrix will broadcast its state to all connected clients **every time** a pixel is set.
+The matrix will broadcast its state to all connected clients **every time** a pixel is set. Cients which can't be sent to will be disconnected.
 
 ---
 
