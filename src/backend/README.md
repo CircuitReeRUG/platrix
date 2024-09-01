@@ -1,36 +1,39 @@
-- [Backend](#backend)
+- [Usage](#usage)
   - [First run](#first-run)
-  - [Endpoints](#endpoints)
-    - [/getMatrix](#getmatrix)
-      - [Request](#request)
-      - [Response](#response)
-    - [/setPixel](#setpixel)
-      - [Request](#request-1)
-      - [Response](#response-1)
-    - [Dependencies and Setup](#dependencies-and-setup)
+  - [Device setup](#device-setup)
+- [Commands](#commands)
+  - [`getMatrix`](#getmatrix)
+    - [Message](#message)
+    - [Response](#response)
+  - [`setPixel`](#setpixel)
+    - [Message](#message-1)
+    - [Response](#response-1)
+  - [Matrix broadcast](#matrix-broadcast)
 
-# Backend
-- Opted to use the [Python bindings of HZeller's RGBMatrix library](https://github.com/vitorleal/matrix-led-python) to interface with the LED matrix.
-- Flask server to handle websockets.
+## Usage
 
-## First run 
+### First run 
 If you haven't ran the [run.sh](../run.sh) script already.
 Install the dependencies:
 ```bash
 chmod +x setup.sh
 ./setup.sh
 ```
+### Device setup
+- Raspberry Pi 4, but any except 5 should work.
+- LED matrix with a HUB75 interface.
+- Jumper cables to connect to the matrix according to [this](https://github.com/hzeller/rpi-rgb-led-matrix/blob/f55736f7595bc028451658996eedea9742688bbc/wiring.md)
+- A router to create a network, in which users can connect to the RPi and interact with the matrix.
 
-## Endpoints
+---
 
-When interacting with the API through WS, just prepend the endpoint with `/ws` and use the WebSocket protocol.
+## Commands
 
-### /getMatrix
-
+### `getMatrix`
 **Description**: Retrieves the current state of the matrix in a JSON format.
 
-#### Request
-No request body is required.
+#### Message
+Just sending the `getMatrix` command will return the current state of the matrix.
 
 #### Response
 
@@ -47,31 +50,26 @@ No request body is required.
 
 - **matrix**: A 2D array representing the matrix, where each value is a packed 32-bit RGB color.
 
-### /setPixel
+### `setPixel`
 
 **Description**: Sets the color of a specific pixel on the matrix.
 
-#### Request
-
-```json
-{
-  "x": 1,
-  "y": 2,
-  "color": 16711680
-}
+#### Message
 ```
-
-- **x**: X-coordinate of the pixel.
-- **y**: Y-coordinate of the pixel.
-- **color**: The color in packed 32-bit RGB format.
-
+setPixel,<x>,<y>,<16-bit packed color>
+```
 #### Response
 
 **Success:**
 
 ```json
 {
-  "status": "success"
+  "matrix": [
+    [16777215, 0, 0, 16711680],
+    [0, 255, 0, 0],
+    [0, 0, 65280, 0],
+    [0, 0, 0, 255]
+  ]
 }
 ```
 
@@ -85,16 +83,10 @@ No request body is required.
 ```
 
 - **message**: Pretty useless error message.
+
+### Matrix broadcast
+The matrix will broadcast its state to all connected clients **every time** a pixel is set.
+
 ---
 
-### Dependencies and Setup
-
-- **Arduino Libraries**: 
-  - `WiFi.h`: For WiFi connectivity.
-  - `AsyncTCP.h` and `ESPAsyncWebServer.h`: For setting up asynchronous HTTP and WebSocket servers.
-  - `matrix.h`: Custom library for matrix manipulation.
-- **Constants**:
-  - `PANEL_WIDTH`, `PANEL_HEIGHT`, `CHAIN_LENGTH`: Define the dimensions of the LED matrix.
-
-Then, you just flash the thing and connect it to the according pins and you're good to go!
 
