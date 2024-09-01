@@ -1,1 +1,1 @@
-![This really sucked to do. Why is React so popular?!](../img/kyp.jpg)
+![This really sucked to do. Why is React so popular?!](../../img/kyp.jpg)
