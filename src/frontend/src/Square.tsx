@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import "./Square.css";
 
 interface SquareProps {
   key: string;
@@ -56,7 +57,7 @@ function Square(props: SquareProps) {
         newColor.b !== color.b
       ) {
         console.log(`Updating color of square at (${props.x}, ${props.y}) from matrix data.`); // DEBUG!
-        setColor(newColor); 
+        setColor(newColor);
       }
     }
   }, [props.matrix, props.x, props.y]);
@@ -71,34 +72,19 @@ function Square(props: SquareProps) {
   };
 
   const inputStyle: React.CSSProperties = {
-    position: "absolute",
-    opacity: 0,
-    pointerEvents: "none",
-    width: "100%",
-    height: "100%",
+
   };
 
   const squareStyle: React.CSSProperties = {
-    width: "12px",
-    height: "12px",
     backgroundColor: rgbToHex(color.r, color.g, color.b),
-    cursor: "pointer",
-    boxSizing: "border-box",
-    transition: "transform 0.1s",
-    border: "1px solid #333",
   };
 
   return (
     <div
+      className="pixel"
       style={squareStyle}
       onClick={() => {
         document.getElementById(`input-${props.x}-${props.y}`)?.click();
-      }}
-      onMouseEnter={(event) => {
-        event.currentTarget.style.transform = "scale(1.1)";
-      }}
-      onMouseLeave={(event) => {
-        event.currentTarget.style.transform = "scale(1)";
       }}
     >
       {/* Hidden color input */}

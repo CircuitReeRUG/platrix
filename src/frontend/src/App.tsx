@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Grid from './Grid';
 import useWebSocket from 'react-use-websocket';
+import chippy from './assets/chippy.png';
 
 const SERVER_URL = 'ws://127.0.0.1:5000/ws';
 
@@ -19,7 +20,7 @@ function App() {
 
   const [matrix, setMatrix] = useState(
     Array(32).fill(Array(64).fill({ r: 0, g: 0, b: 0 }))
-  ); 
+  );
 
   // Update matrix
   useEffect(() => {
@@ -56,14 +57,14 @@ function App() {
   };
 
   return (
-    <div style={appContainerStyle}>
+    <article id="appContainer">
       {/* Sticky Header */}
-      <header style={headerStyle}>
-        <div style={leftContainerStyle}>
-          <img src="/chippy.png" alt="icon" style={faviconStyle} />
-          <span style={titleStyle}>Platrix</span>
+      <header id="appHeader">
+        <div id="appTitle">
+          <img src={chippy} alt="chippy" />
+          <h1>Platrix</h1>
         </div>
-        <div style={rightContainerStyle}>
+        <div id="appStatus">
           <span style={{ color: getStatusColor() }}>
             {readyState === WebSocket.OPEN
               ? 'Connected'
@@ -77,8 +78,8 @@ function App() {
       </header>
 
       {/* Grid Container with Zoom */}
-      <div style={gridOuterContainerStyle}>
-        <div style={zoomContainerStyle}>
+      <section id="gridContainer">
+        <div id="gridInner">
           <Grid
             width={64}
             height={32}
@@ -86,74 +87,9 @@ function App() {
             setPixel={setPixel}
           />
         </div>
-      </div>
-    </div>
+      </section>
+    </article>
   );
 }
 
 export default App;
-
-
-// These need fixing :arrow_down:
-const appContainerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100vh',
-  width: '100vw',
-  margin: 0,
-  padding: 0,
-  overflow: 'hidden',
-};
-
-const gridOuterContainerStyle: React.CSSProperties = {
-  flexGrow: 1,
-  marginTop: '2.5rem', 
-  overflow: 'scroll',
-};
-
-
-const zoomContainerStyle: React.CSSProperties = {
-  transform: "scale(5)",
-  transformOrigin: 'top left',
-  display: 'inline-block',
-};
-
-const headerStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  backgroundColor: '#333',
-  color: 'white',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  padding: '0.5rem 1rem',
-  zIndex: 1000,
-  boxSizing: 'border-box',
-  height: '2.5rem',
-  borderBottom: '1px solid #444',
-  width: '100vw',
-  overflow: 'hidden',
-};
-
-const leftContainerStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-};
-
-const rightContainerStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-};
-
-const faviconStyle: React.CSSProperties = {
-  width: '1.5rem',
-  height: '1.5rem',
-  marginRight: '0.5rem',
-};
-
-const titleStyle: React.CSSProperties = {
-  fontSize: '1.2rem',
-  fontWeight: 'bold',
-};

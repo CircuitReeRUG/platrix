@@ -39,7 +39,7 @@ function Grid(props: GridProps) {
     display: "grid",
     gridTemplateColumns: `repeat(${props.width}, auto)`,
     gridTemplateRows: `repeat(${props.height}, auto)`,
-    gap: "1px",
+    gap: "0",
     justifyContent: "start",
     alignItems: "start",
   };
