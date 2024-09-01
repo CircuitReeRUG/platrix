@@ -3,7 +3,7 @@ import Grid from './Grid';
 import useWebSocket from 'react-use-websocket';
 import chippy from './assets/chippy.png';
 
-const SERVER_URL = 'ws://127.0.0.1:5000/ws';
+const SERVER_URL = 'ws://192.168.0.100:5000/ws';
 
 function App() {
   // Initialize ws connection
@@ -78,7 +78,7 @@ function App() {
       </header>
 
       {/* Grid Container with Zoom */}
-      <section id="gridContainer">
+      <section id="gridContainer" className={readyState === WebSocket.OPEN ? "ready"  : "not-ready"}>
         <div id="gridInner">
           <Grid
             width={64}

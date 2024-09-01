@@ -71,10 +71,6 @@ function Square(props: SquareProps) {
     props.setPixel(props.x, props.y, packedColor);
   };
 
-  const inputStyle: React.CSSProperties = {
-
-  };
-
   const squareStyle: React.CSSProperties = {
     backgroundColor: rgbToHex(color.r, color.g, color.b),
   };
@@ -95,7 +91,6 @@ function Square(props: SquareProps) {
         onFocus={props.onColorPickerOpen}
         onChange={handleColorChange}
         onBlur={props.onColorPickerClose}
-        style={inputStyle}
       />
     </div>
   );

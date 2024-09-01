@@ -1,3 +1,6 @@
+# vscode garbage
+.vscode/
+
 # Garbage ass node-modules
 node_modules/
 
