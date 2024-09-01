@@ -108,11 +108,12 @@ const appContainerStyle: React.CSSProperties = {
 const gridOuterContainerStyle: React.CSSProperties = {
   flexGrow: 1,
   marginTop: '2.5rem', 
-  overflow: 'auto',
+  overflow: 'scroll',
 };
 
+
 const zoomContainerStyle: React.CSSProperties = {
-  transform: 'scale(2)', 
+  transform: "scale(5)",
   transformOrigin: 'top left',
   display: 'inline-block',
 };
@@ -132,6 +133,8 @@ const headerStyle: React.CSSProperties = {
   boxSizing: 'border-box',
   height: '2.5rem',
   borderBottom: '1px solid #444',
+  width: '100vw',
+  overflow: 'hidden',
 };
 
 const leftContainerStyle: React.CSSProperties = {
