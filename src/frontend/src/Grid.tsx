@@ -5,6 +5,7 @@ interface GridProps {
   width: number;
   height: number;
   matrix: any[];
+  readyState: number;
   setPixel: (x: number, y: number, color: number) => void;
 }
 
@@ -29,6 +30,7 @@ function Grid(props: GridProps) {
           setPixel={props.setPixel}
           onColorPickerOpen={() => setIsColorPickerOpen(true)}
           onColorPickerClose={() => setIsColorPickerOpen(false)}
+          readyState={props.readyState}
         />
       );
     }

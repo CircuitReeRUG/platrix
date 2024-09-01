@@ -1,22 +1,25 @@
-import { useEffect, useState } from 'react';
-import Grid from './Grid';
-import useWebSocket from 'react-use-websocket';
-import chippy from './assets/chippy.png';
+import { useEffect, useState } from "react";
+import Grid from "./Grid";
+import useWebSocket from "react-use-websocket";
+import chippy from "./assets/chippy.png";
 
-const SERVER_URL = 'ws://127.0.0.1:5000/ws';
+const SERVER_URL = "ws://127.0.0.1:5000/ws";
 
 function App() {
   // Initialize ws connection
-  const { sendMessage, lastJsonMessage, readyState } = useWebSocket(SERVER_URL, {
-    onOpen: () => {
-      console.log('WebSocket connected.');
-      sendMessage('getMatrix');
-    },
-    onClose: () => console.log('WebSocket disconnected.'),
-    shouldReconnect: () => true,
-    reconnectAttempts: 10,
-    reconnectInterval: 3000,
-  });
+  const { sendMessage, lastJsonMessage, readyState } = useWebSocket(
+    SERVER_URL,
+    {
+      onOpen: () => {
+        console.log("WebSocket connected.");
+        sendMessage("getMatrix");
+      },
+      onClose: () => console.log("WebSocket disconnected."),
+      shouldReconnect: () => true,
+      reconnectAttempts: 10,
+      reconnectInterval: 3000,
+    }
+  );
 
   const [matrix, setMatrix] = useState(
     Array(32).fill(Array(64).fill({ r: 0, g: 0, b: 0 }))
@@ -36,7 +39,7 @@ function App() {
     if (readyState === WebSocket.OPEN) {
       sendMessage(`setPixel,${x},${y},${color}`);
     } else {
-      console.error('WebSocket is not open.');
+      console.error("WebSocket is not open.");
     }
   };
 
@@ -44,15 +47,15 @@ function App() {
   const getStatusColor = () => {
     switch (readyState) {
       case WebSocket.OPEN:
-        return 'green';
+        return "green";
       case WebSocket.CONNECTING:
-        return 'orange';
+        return "orange";
       case WebSocket.CLOSING:
-        return 'red';
+        return "yellow";
       case WebSocket.CLOSED:
-        return 'gray';
+        return "red";
       default:
-        return 'gray';
+        return "gray";
     }
   };
 
@@ -67,25 +70,23 @@ function App() {
         <div id="appStatus">
           <span style={{ color: getStatusColor() }}>
             {readyState === WebSocket.OPEN
-              ? 'Connected'
+              ? "Connected"
               : readyState === WebSocket.CONNECTING
-              ? 'Connecting...'
+              ? "Connecting..."
               : readyState === WebSocket.CLOSING
-              ? 'Closing...'
-              : 'Disconnected'}
+              ? "Closing..."
+              : "Disconnected"}
           </span>
         </div>
       </header>
 
       {/* Grid Container with Zoom */}
-      <section id="gridContainer" className={readyState === WebSocket.OPEN ? "ready"  : "not-ready"}>
+      <section
+        id="gridContainer"
+        className={readyState === WebSocket.OPEN ? "ready" : "not-ready"}
+      >
         <div id="gridInner">
-          <Grid
-            width={64}
-            height={32}
-            matrix={matrix}
-            setPixel={setPixel}
-          />
+          <Grid width={64} height={32} matrix={matrix} setPixel={setPixel} readyState={readyState}/>
         </div>
       </section>
     </article>

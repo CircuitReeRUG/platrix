@@ -14,15 +14,16 @@ interface SquareProps {
   setPixel: (x: number, y: number, color: number) => void;
   onColorPickerOpen: () => void;
   onColorPickerClose: () => void;
+  readyState: number;
 }
 
 function Square(props: SquareProps) {
   const [color, setColor] = useState(props.initialColor);
 
   const unpackColor = (packedColor: number) => {
-    const r = (packedColor >> 8) & 0xF8;
-    const g = (packedColor >> 3) & 0xFC;
-    const b = (packedColor << 3) & 0xF8;
+    const r = (packedColor >> 8) & 0xf8;
+    const g = (packedColor >> 3) & 0xfc;
+    const b = (packedColor << 3) & 0xf8;
     return { r, g, b };
   };
 
@@ -56,7 +57,9 @@ function Square(props: SquareProps) {
         newColor.g !== color.g ||
         newColor.b !== color.b
       ) {
-        console.log(`Updating color of square at (${props.x}, ${props.y}) from matrix data.`); // DEBUG!
+        console.log(
+          `Updating color of square at (${props.x}, ${props.y}) from matrix data.`
+        ); // DEBUG!
         setColor(newColor);
       }
     }
@@ -64,10 +67,13 @@ function Square(props: SquareProps) {
 
   // Function to handle color change
   const handleColorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    
     const newColor = hexToRgb(event.target.value);
     setColor(newColor);
     const packedColor = packColor(newColor.r, newColor.g, newColor.b); // DEBUG!
-    console.log(`Setting pixel at (${props.x}, ${props.y}) to color: ${packedColor}`);
+    console.log(
+      `Setting pixel at (${props.x}, ${props.y}) to color: ${packedColor}`
+    );
     props.setPixel(props.x, props.y, packedColor);
   };
 
@@ -80,7 +86,9 @@ function Square(props: SquareProps) {
       className="pixel"
       style={squareStyle}
       onClick={() => {
-        document.getElementById(`input-${props.x}-${props.y}`)?.click();
+        if (props.readyState === WebSocket.OPEN) {
+          document.getElementById(`input-${props.x}-${props.y}`)?.click();
+        }
       }}
     >
       {/* Hidden color input */}
