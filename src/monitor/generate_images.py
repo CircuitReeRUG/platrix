@@ -14,11 +14,15 @@ int_to_bytes = Struct('>I').pack
 
 
 def create_image(pixel_matrix: list[list[int]]) -> Image.Image:
-    bytearr = []
+    rgb_bytes = []
     for row in pixel_matrix:
         for p in row:
-            bytearr += int_to_bytes(p & 0xFFFFFF)  # masked to fill the bytes
-    im = Image.frombuffer("RGB", SIZE, bytes(bytearr))
+            r = (p >> 16) & 0xFF
+            g = (p >> 8) & 0xFF
+            b = p & 0xFF
+            rgb_bytes.extend([r, g, b])
+    
+    im = Image.frombuffer("RGB", SIZE, bytes(rgb_bytes))
     return im
 
 

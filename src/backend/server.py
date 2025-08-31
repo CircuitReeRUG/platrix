@@ -4,8 +4,10 @@ import json
 from time import sleep
 import logging
 from rgbmatrix import RGBMatrix, RGBMatrixOptions
+from PIL import Image
+import os
 
-USING_MATRIX = False
+USING_MATRIX = True # CHANGE THIS TO FALSE IF TESTING
 M_WIDTH = 64
 M_HEIGHT = 32
 M_CHAIN = 1
@@ -24,23 +26,51 @@ if USING_MATRIX:
     options.chain_length = M_CHAIN
     options.parallel = 1
     options.hardware_mapping = 'regular'
+    options.disable_hardware_pulsing = True
 
     matrix = RGBMatrix(options = options)
     matrix.Fill(0, 0, 0) # Fill the matrix with black color
 
 matrix_data = [[0 for _ in range(M_WIDTH)] for _ in range(M_HEIGHT)]
 
+def encode_color(r:int, g:int, b:int) -> int:
+    return (r << 16) | (g << 8) | b
+
+def decode_color(color:int) -> tuple[int,int,int]:
+    r = (color >> 16) & 0xFF
+    g = (color >> 8) & 0xFF
+    b = color & 0xFF
+    return r, g, b
+
+ORDER = ("R","B","G")
+
+def _apply_order(r:int,g:int,b:int) -> tuple[int,int,int]:
+    return tuple({"R": r, "G": g, "B": b}[c] for c in ORDER)
+
 def __update_pixel(x:int, y:int, color:int) -> None:
     matrix_data[y][x] = color
     if USING_MATRIX:
-        matrix.SetPixel(x, y, (color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF)
+        r, g, b = decode_color(color)
+        hr, hg, hb = _apply_order(r,g,b)
+        matrix.SetPixel(x, y, hr, hg, hb)
     return None
 
 def __is_valid_coordinate(x:int, y:int) -> bool:
-    return 0 <= x < options.rows and 0 <= y < options.cols
+    return 0 <= x < M_WIDTH and 0 <= y < M_HEIGHT
 
 def __is_valid_color(color:int) -> bool:
-    return 0 <= color <= 16777215 # 0xFFFFFF
+    return 0 <= color <= 0xFFFFFF
+
+def load_image(path:str) -> list[list[int]]:
+    img = Image.open(path).convert("RGB")
+
+    for y in range(M_HEIGHT):
+        for x in range(M_WIDTH):
+            r, g, b = img.getpixel((x, y))
+            if USING_MATRIX:
+                hr, hg, hb = _apply_order(r,g,b)
+                matrix.SetPixel(x, y, hr, hg, hb)
+
 
 def broadcast_matrix(connected_clients:set) -> None:
     """Broadcasts the current matrix to all connected clients.
@@ -118,5 +148,26 @@ def websocket_handler(ws):
         if ws in app.connected_clients:
             app.connected_clients.remove(ws)
 
+
+def test_matrix():
+    if not USING_MATRIX:
+        return None
+    # flash r,g,b and white
+    colors = [(255, 0, 0), (0, 0, 255), (0, 255, 0), (255, 255, 255)]
+    for color in colors:
+        matrix.Fill(color[0], color[1], color[2])
+        sleep(0.3)
+    matrix.Fill(0, 0, 0)
+    
+    # flash splash screens
+    for splash in os.listdir("img"):
+        load_image(os.path.join("img", splash))
+        sleep(3)
+        
+    matrix.Fill(0, 0, 0)
+    
+    return None
+
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    test_matrix()
+    app.run(host="0.0.0.0", port=5000)

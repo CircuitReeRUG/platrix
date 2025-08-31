@@ -21,20 +21,20 @@ function Square(props: SquareProps) {
   const [color, setColor] = useState(props.initialColor);
 
   const unpackColor = (packedColor: number) => {
-    const r = (packedColor >> 8) & 0xf8;
-    const g = (packedColor >> 3) & 0xfc;
-    const b = (packedColor << 3) & 0xf8;
+    const r = (packedColor >> 16) & 0xff;
+    const g = (packedColor >> 8) & 0xff;
+    const b = packedColor & 0xff;
     return { r, g, b };
   };
 
   const packColor = (r: number, g: number, b: number) => {
-    return ((r & 0xf8) << 8) | ((g & 0xfc) << 3) | (b >> 3);
+    return (r << 16) | (g << 8) | b;
   };
 
   const rgbToHex = (r: number, g: number, b: number) => {
     return (
       "#" +
-      ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()
+      ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
     );
   };
 
